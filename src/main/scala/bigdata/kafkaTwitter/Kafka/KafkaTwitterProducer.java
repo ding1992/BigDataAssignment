@@ -21,6 +21,7 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import twitter4j.JSONObject;
 
 public class KafkaTwitterProducer {
+	
 	public static void main(String[] args) throws Exception {
 		final LinkedBlockingQueue<Status> queue = new LinkedBlockingQueue<Status>(1000);
 
@@ -39,12 +40,12 @@ public class KafkaTwitterProducer {
 		String[] keyWords = Arrays.copyOfRange(arguments, 5, arguments.length);
 
 		// Set twitter oAuth tokens in the configuration
-		ConfigurationBuilder cb = new ConfigurationBuilder();
-		cb.setDebugEnabled(true).setOAuthConsumerKey(consumerKey).setOAuthConsumerSecret(consumerSecret)
+		ConfigurationBuilder configBuilder = new ConfigurationBuilder();
+		configBuilder.setDebugEnabled(true).setOAuthConsumerKey(consumerKey).setOAuthConsumerSecret(consumerSecret)
 				.setOAuthAccessToken(accessToken).setOAuthAccessTokenSecret(accessTokenSecret);
 
 		// Create twitterstream using the configuration
-		TwitterStream twitterStream = new TwitterStreamFactory(cb.build()).getInstance();
+		TwitterStream twitterStream = new TwitterStreamFactory(configBuilder.build()).getInstance();
 		StatusListener listener = new StatusListener() {
 
 			@Override

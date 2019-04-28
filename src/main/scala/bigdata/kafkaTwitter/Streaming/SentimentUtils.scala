@@ -9,8 +9,10 @@ import edu.stanford.nlp.ling.CoreAnnotations
 import edu.stanford.nlp.sentiment.SentimentCoreAnnotations
 
 object SentimentUtils {
-  val nlpPropts = {
-    val propts = new Properties()
+
+  val nlpProperties = {
+  
+    val properties = new Properties()
     /* Annotators - Meaning http://corenlp.run/
        tokenize   - Tokenize the sentence.
        ssplit     - Split the text into sentence. Identify fullstop, exclamation etc and split sentences
@@ -19,14 +21,16 @@ object SentimentUtils {
        parse      - Provide syntactic analysis http://nlp.stanford.edu:8080/parser/index.jsp
        sentiment  - Provide model for sentiment analysis
        * */
-    propts.setProperty("annotators", "tokenize, ssplit, pos, lemma, parse, sentiment")
-    propts
+    
+	properties.setProperty("annotators", "tokenize, ssplit, pos, lemma, parse, sentiment")
+    properties
+	
   }
 
   def detectSentiment(message: String): String = {
 
     // Create a pipeline with NLP properties
-    val pipeline = new StanfordCoreNLP(nlpPropts)
+    val pipeline = new StanfordCoreNLP(nlpProperties)
 
     // Run message through the Pipeline
     val annotation = pipeline.process(message)
@@ -34,37 +38,40 @@ object SentimentUtils {
     var sizes: ListBuffer[Int] = ListBuffer()
 
     var longest = 0
-    var mainSentiment = 0
+    var main_sentiments = 0
 
     // An Annotation is a Map and you can get and use the various analyses individually.
     // For instance, this gets the parse tree of the first sentence in the text.
     // Iterate through tweet
-    for (tweetMsg <- annotation.get(classOf[CoreAnnotations.SentencesAnnotation])) {
+    for (tweet_msg <- annotation.get(classOf[CoreAnnotations.SentencesAnnotation])) {
+	
       // Create a RNN parse tree
-      val parseTree = tweetMsg.get(classOf[SentimentCoreAnnotations.AnnotatedTree])
-      // Detect Sentiment
-      val tweetSentiment = RNNCoreAnnotations.getPredictedClass(parseTree)
-      val partText = tweetMsg.toString
-
-      if (partText.length() > longest) {
-        mainSentiment = tweetSentiment
-        longest = partText.length()
+	  val parse_tree = tweet_msg.get(classOf[SentimentCoreAnnotations.AnnotatedTree])
+      
+	  // Detect Sentiment
+      val tweet_sentiments = RNNCoreAnnotations.getPredictedClass(parse_tree)
+      val part_text = tweet_msg.toString
+weightedSentiment
+      if (part_text.length() > longest) {
+        main_sentiments = tweet_sentiments
+        longest = part_text.length()
       }
 
-      sentiments += tweetSentiment.toDouble
-      sizes += partText.length
+      sentiments += tweet_sentiments.toDouble
+      sizes += part_text.length
+	  
     }
 
-    val weightedSentiments = (sentiments, sizes).zipped.map((sentiment, size) => sentiment * size)
-    var weightedSentiment = weightedSentiments.sum / (sizes.fold(0)(_ + _))
+    val weighted_sentiments = (sentiments, sizes).zipped.map((sentiment, size) => sentiment * size)
+    var weighted_sentiment = weighted_sentiments.sum / (sizes.fold(0)(_ + _))
 
-    if (weightedSentiment <= 0.0)
+    if (weighted_sentiment <= 0.0)
       "NOT_UNDERSTOOD"
-    else if (weightedSentiment < 1.6)
+    else if (weighted_sentiment < 1.6)
       "NEGATIVE"
-    else if (weightedSentiment <= 2.0)
+    else if (weighted_sentiment <= 2.0)
       "NEUTRAL"
-    else if (weightedSentiment < 5.0)
+    else if (weighted_sentiment < 5.0)
       "POSITIVE"
     else "NOT_UNDERSTOOD"    
   }
